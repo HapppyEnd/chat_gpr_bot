@@ -263,7 +263,7 @@ async def text_handler(
 dialog: Dialog = Dialog()
 dialog.mode = None
 chat_gpt: ChatGptService = ChatGptService(ChatGPT_TOKEN)
-app: ApplicationBuilder = ApplicationBuilder().token(BOT_TOKEN).build()
+app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler('start', start))
 app.add_handler(CommandHandler('random', random))
