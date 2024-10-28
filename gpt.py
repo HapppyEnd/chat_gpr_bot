@@ -1,14 +1,27 @@
-import httpx as httpx
+import httpx
 from openai import OpenAI
 
 
 class ChatGptService:
-    client: OpenAI = None
-    message_list: list[dict[str, str]] = None
+    """
+    Сервис для взаимодействия с моделью ChatGPT.
+
+    Этот класс предоставляет методы для отправки сообщений в модель
+    ChatGPT, управления списком сообщений и установки системного
+    промпта. Он использует API OpenAI для получения ответов от модели.
+
+    Attributes:
+        client (OpenAI): Клиент OpenAI для взаимодействия с API.
+        message_list (list[dict[str, str]]): Список сообщений,
+        отправляемых в модель.
+    """
+
+    client: OpenAI
+    message_list: list[dict[str, str]]
 
     def __init__(self, token: str) -> None:
-        token = "sk-proj-" + token[:3:-1] if token.startswith(
-            'gpt:') else token
+        token = (
+            "sk-proj-" + token[:3:-1] if token.startswith('gpt:') else token)
         self.client = OpenAI(
             http_client=httpx.Client(proxies="http://18.199.183.77:49232"),
             api_key=token
@@ -44,7 +57,8 @@ class ChatGptService:
 
     async def add_message(self, message_text: str) -> str:
         """
-        Добавляет сообщение пользователя в список и получает ответ от модели.
+        Добавляет сообщение пользователя в список и получает ответ от
+        модели.
 
         Args:
             message_text (str): Текст сообщения пользователя.
