@@ -1,3 +1,5 @@
+import logging
+
 from telegram import Update
 from telegram.ext import (ApplicationBuilder, CallbackQueryHandler,
                           CommandHandler, ContextTypes, ConversationHandler,
@@ -20,10 +22,21 @@ from gpt import ChatGptService
 from util import (load_message, load_prompt, send_html, send_image,
                   send_response, send_text, send_text_buttons, show_main_menu)
 
+# Настройка логирования
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+
+logger = logging.getLogger(__name__)
+
 chat_gpt: ChatGptService = ChatGptService.get_instance()
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обрабатывает команду /start и показывает главное меню."""
+    logger.info('Старт команды /start от пользователя %s',
+                update.effective_user.id)
     text: str = load_message(START_MESSAGE)
     await send_response(update, context, START_MESSAGE, text)
     await show_main_menu(update, context, MAIN_MENU_BUTTONS)
@@ -31,6 +44,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def random(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Отправляет пользователю рандомный факт."""
+    logger.info('Запрос на рандомный факт от пользователя %s',
+                update.effective_user.id)
     prompt: str = load_prompt(RANDOM_MESSAGE)
     message: str = load_message(RANDOM_MESSAGE)
     message = await send_response(update, context, RANDOM_MESSAGE, message)
@@ -42,30 +58,29 @@ async def random(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             'random_fact': BUTTON_TEXTS['random_fact'],
             'main_menu': BUTTON_TEXTS['main_menu']
         }
-        await send_text_buttons(
-            update, context, RANDOM_MORE, buttons)
+        await send_text_buttons(update, context, RANDOM_MORE, buttons)
+        logger.info('Рандомный факт отправлен пользователю %s',
+                    update.effective_user.id)
     except Exception as e:
+        logger.error('Ошибка при получении рандомного факта: %s', str(e))
         await message.edit_text(ERROR_MESSAGE.format(error=str(e)))
     return RANDOM
 
 
 async def random_fact(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обработчик для кнопки 'Еще рандомный факт'.
-    Вызывает повторное выполнение функции random для получения нового факта.
-    """
+    """Обрабатывает запрос на получение еще одного рандомного факта."""
+    logger.info('Пользователь %s запрашивает еще рандомный факт',
+                update.effective_user.id)
     await update.callback_query.answer()
     await random(update, context)
     return RANDOM
 
 
 async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обработчик команды /gpt.
-    Настраивает режим бота на общение с ChatGPT и отправляет
-    соответствующее сообщение.
-    """
+    """Обрабатывает команду /gpt и начинает диалог с ChatGPT."""
+    logger.info('Пользователь %s вызвал команду /gpt',
+                update.effective_user.id)
     prompt: str = load_prompt(GPT_MESSAGE)
     chat_gpt.set_prompt(prompt)
     message: str = load_message(GPT_MESSAGE)
@@ -75,10 +90,9 @@ async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def gpt_dialog(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обработчик текстовых сообщений в режиме диалога с ChatGPT.
-    Отправляет введенное сообщение в ChatGPT и возвращает ответ пользователю.
-    """
+    """Обрабатывает сообщения от пользователя в режиме GPT."""
+    logger.info('Обработка сообщения от пользователя %s в режиме GPT',
+                update.effective_user.id)
     text: str = update.message.text
     message = await send_text(update, context, LOADING_MESSAGE)
 
@@ -86,19 +100,20 @@ async def gpt_dialog(
         answer: str = await chat_gpt.add_message(text)
         await message.edit_text(answer)
         buttons: dict[str, str] = {'main_menu': BUTTON_TEXTS['main_menu']}
-        await send_text_buttons(
-            update, context, RETURN_TO_MAIN, buttons)
+        await send_text_buttons(update, context, RETURN_TO_MAIN, buttons)
+        logger.info('Ответ от ChatGPT отправлен пользователю %s',
+                    update.effective_user.id)
     except Exception as e:
+        logger.error('Ошибка при обработке сообщения GPT: %s', str(e))
         await message.edit_text(ERROR_MESSAGE.format(error=str(e)))
     return GPT
 
 
 async def show_persons(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Показывает пользователю выбор личностей для разговора.
-    Отправляет список доступных личностей и кнопки для выбора.
-    """
+    """Отправляет пользователю список доступных личностей для общения."""
+    logger.info('Показ списка личностей пользователю %s',
+                update.effective_user.id)
     await send_response(
         update, context, TALK_MESSAGE, load_message(TALK_MESSAGE))
     buttons: dict[str, str] = {name: TRANSLATE_PERSONS[name]
@@ -109,24 +124,19 @@ async def show_persons(
 
 async def select_person(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обрабатывает выбор личности пользователем.
-    Сохраняет выбранную личность и переходит в режим разговора с ней.
-    """
+    """Обрабатывает выбор личности пользователем."""
     await update.callback_query.answer()
     person: str = update.callback_query.data
     context.user_data['person'] = person
+    logger.info('Пользователь %s выбрал личность %s',
+                update.effective_user.id, person)
     await talk_with_person(update, context)
     return TALK
 
 
 async def talk_with_person(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Начинает разговор с выбранной личностью.
-    Отправляет изображение и сообщение, информирующее пользователя о
-    начале разговора.
-    """
+    """Начинает разговор с выбранной личностью."""
     person: str = context.user_data.get('person')
 
     if person:
@@ -135,10 +145,14 @@ async def talk_with_person(
         try:
             await send_image(update, context, image)
             await send_text(
-                update, context,
+                update,
+                context,
                 f'Вы начали разговор с {TRANSLATE_PERSONS[person]}. '
                 'Напишите что-нибудь!')
+            logger.info('Начало разговора с личностью %s для пользователя %s',
+                        person, update.effective_user.id)
         except Exception as e:
+            logger.error('Ошибка при начале разговора: %s', str(e))
             await send_text(
                 update, context, f'Не удалось начать разговор: {str(e)}')
     else:
@@ -148,19 +162,17 @@ async def talk_with_person(
 
 async def change_person(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обрабатывает запрос на изменение личности.
-    Возвращает пользователя к списку доступных личностей для выбора.
-    """
+    """Обрабатывает запрос пользователя на изменение личности."""
+    logger.info('Пользователь %s запрашивает изменение личности',
+                update.effective_user.id)
     await update.callback_query.answer()
     await show_persons(update, context)
     return TALK
 
 
 async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обрабатывает текстовые сообщения в режиме разговора с личностью.
-    Отправляет сообщение пользователю и предлагает выбрать другую личность.
+    """Обрабатывает сообщения от пользователя в режиме разговора с
+    личностью.
     """
     person: str = context.user_data.get('person')
 
@@ -170,19 +182,20 @@ async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await send_text(update, context, answer)
         buttons: dict[str, str] = {
             'change_person': BUTTON_TEXTS['change_person'],
-            'main_menu': BUTTON_TEXTS['main_menu']}
-        await send_text_buttons(
-            update, context, CHANGE_PERSON, buttons)
+            'main_menu': BUTTON_TEXTS['main_menu']
+        }
+        await send_text_buttons(update, context, CHANGE_PERSON, buttons)
+        logger.info('Пользователь %s отправил сообщение: %s',
+                    update.effective_user.id, user_message)
     else:
         await show_persons(update, context)
     return TALK
 
 
 async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обработчик команды /quiz.
-    Отправляет сообщение с инструкциями и кнопками для выбора темы квиза.
-    """
+    """Обрабатывает команду /quiz и показывает доступные темы квизов."""
+    logger.info('Пользователь %s вызвал команду /quiz',
+                update.effective_user.id)
     await send_response(
         update, context, QUIZ_MESSAGE, load_message(QUIZ_MESSAGE))
     await send_text_buttons(update, context, SELECT_QUIZ_TOPIC, QUIZ_BUTTONS)
@@ -191,10 +204,7 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def quiz_topic_selected(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обрабатывает выбор темы квиза.
-    Сохраняет выбранную тему и отправляет первый вопрос по ней.
-    """
+    """Обрабатывает выбор темы квиза пользователем."""
     await update.callback_query.answer()
     chat_gpt.set_prompt(load_prompt(QUIZ_MESSAGE))
     user_message: str = update.callback_query.data
@@ -202,15 +212,14 @@ async def quiz_topic_selected(
     context.user_data['correct_answers'] = 0
     answer: str = await chat_gpt.add_message(user_message)
     await send_html(update, context, answer)
+    logger.info('Пользователь %s выбрал тему квиза: %s',
+                update.effective_user.id, user_message)
     return QUIZ
 
 
 async def handle_quiz_answer(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обрабатывает ответ пользователя на вопрос квиза.
-    Проверяет правильность ответа и отправляет результат пользователю.
-    """
+    """Обрабатывает ответ пользователя на вопрос квиза."""
     user_answer: str = (
         update.message.text if update.message else update.callback_query.data
     )
@@ -224,7 +233,8 @@ async def handle_quiz_answer(
             topic_key: str = context.user_data.get('quiz_topic')
             current_topic: str = TRANSLATE_QUIZ_TOPICS.get(topic_key)
             await send_html(
-                update, context,
+                update,
+                context,
                 f'Правильных ответов по теме {current_topic}: {current_score}')
             buttons: dict[str, str] = {
                 'quiz_more': BUTTON_TEXTS['quiz_more'],
@@ -232,32 +242,29 @@ async def handle_quiz_answer(
                 'main_menu': BUTTON_TEXTS['main_menu']
             }
             await send_text_buttons(
-                update, context, CHANGE_QUIZ_TOPIC_OR_CONTINUE,
-                buttons)
+                update, context, CHANGE_QUIZ_TOPIC_OR_CONTINUE, buttons)
+            logger.info('Пользователь %s ответил на вопрос квиза: %s',
+                        update.effective_user.id, user_answer)
         except Exception as e:
+            logger.error(
+                'Ошибка при обработке ответа на вопрос квиза: %s', str(e))
             await send_html(update, context, f'Произошла ошибка: {str(e)}')
     return QUIZ
 
 
 async def change_quiz_topic(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обрабатывает запрос на изменение темы квиза.
-    Возвращает пользователя к списку доступных тем для выбора.
-    """
+    """Обрабатывает запрос пользователя на изменение темы квиза."""
+    logger.info('Пользователь %s запрашивает изменение темы квиза',
+                update.effective_user.id)
     await update.callback_query.answer()
-    await send_text_buttons(
-        update, context, NEW_QUIZ_TOPIC, QUIZ_BUTTONS)
+    await send_text_buttons(update, context, NEW_QUIZ_TOPIC, QUIZ_BUTTONS)
     return QUIZ
 
 
 async def quiz_more(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Обрабатывает запрос на получение ещё одного вопроса по текущей теме квиза.
-    Отправляет новый вопрос пользователю.
-    """
-
+    """Запрашивает новый вопрос по текущей теме квиза."""
     await update.callback_query.answer()
     topic: str = context.user_data.get('quiz_topic')
     if topic:
@@ -265,18 +272,25 @@ async def quiz_more(
         try:
             answer: str = await chat_gpt.add_message(question)
             await send_html(update, context, answer)
+            logger.info(
+                'Пользователь %s запрашивает еще один вопрос по теме %s',
+                update.effective_user.id, topic)
         except Exception as e:
+            logger.error('Ошибка при получении нового вопроса: %s', str(e))
             await send_text_buttons(
-                update, context,
-                f'Не удалось получить новый вопрос: {str(e)}', QUIZ_BUTTONS)
+                update,
+                context,
+                'Не удалось получить новый вопрос: {str(e)}', QUIZ_BUTTONS)
     else:
-        await send_text_buttons(
-            update, context, NEW_QUIZ_TOPIC, QUIZ_BUTTONS)
+        await send_text_buttons(update, context, NEW_QUIZ_TOPIC, QUIZ_BUTTONS)
     return QUIZ
 
 
 async def main_menu(
         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Возвращает пользователя в главное меню."""
+    logger.info('Пользователь %s возвращается в главное меню',
+                update.effective_user.id)
     await update.callback_query.answer()
     await start(update, context)
     return MAIN
