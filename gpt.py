@@ -1,6 +1,8 @@
 import httpx
 from openai import OpenAI
 
+from credentials import ChatGPT_TOKEN
+
 
 class ChatGptService:
     """
@@ -18,6 +20,12 @@ class ChatGptService:
 
     client: OpenAI
     message_list: list[dict[str, str]]
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self, token: str) -> None:
         token = (
@@ -27,6 +35,12 @@ class ChatGptService:
             api_key=token
         )
         self.message_list = []
+
+    @staticmethod
+    def get_instance():
+        if not ChatGptService._instance:
+            ChatGptService._instance = ChatGptService(ChatGPT_TOKEN)
+        return ChatGptService._instance
 
     async def send_message_list(self) -> str:
         """
