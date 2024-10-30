@@ -1,7 +1,7 @@
 from util import load_prompt
 
 # Статусы состояний
-MAIN, RANDOM, GPT, TALK, QUIZ = range(5)
+MAIN, RANDOM, GPT, TALK, QUIZ, NEW_WORD = range(6)
 
 # Кнопки главного меню
 MAIN_MENU_BUTTONS = {
@@ -9,33 +9,36 @@ MAIN_MENU_BUTTONS = {
     'random': 'Узнать случайный интересный факт 🧠',
     'gpt': 'Задать вопрос чату GPT 🤖',
     'talk': 'Поговорить с известной личностью 👤',
-    'quiz': 'Поучаствовать в квизе ❓'
+    'quiz': 'Поучаствовать в квизе ❓',
+    'new_word': 'Выучи новое слово!  🆕'
 }
 
 # Паттерны для CallbackQueryHandler
 CALLBACK_MAIN_MENU = '^main_menu'
 CALLBACK_RANDOM_FACT = '^random_fact'
 CALLBACK_CHANGE_PERSON = '^change_person'
+CALLBACK_NEW_WORD = '^new_word'
 CALLBACK_QUIZ_TOPIC = '^(quiz_prog|quiz_math|quiz_biology)'
 CALLBACK_QUIZ_MORE = '^quiz_more'
 CALLBACK_CHANGE_QUIZ_TOPIC = '^change_quiz_topic'
 CALLBACK_PERSONS = '^(Cobain|Hawking|Nietzsche|Queen|Tolkien)'
 
 # Сообщения
-ERROR_MESSAGE = '🚫 Произошла ошибка: {error}'
-LOADING_MESSAGE = '⏳ Думаю над вопросом...'
-SELECT_PERSON = '🔍 Выберите личность:'
-SELECT_QUIZ_TOPIC = '📚 Выберите тему:'
 START_MESSAGE = 'main'
 RANDOM_MESSAGE = 'random'
 GPT_MESSAGE = 'gpt'
 TALK_MESSAGE = 'talk'
 QUIZ_MESSAGE = 'quiz'
-RETURN_TO_MAIN = 'Вернуться в главное меню'
-RANDOM_MORE = 'Хотите еще один факт?'
-CHANGE_PERSON = 'Выбрать другую личность?'
-CHANGE_QUIZ_TOPIC_OR_CONTINUE = 'Хотите задать ещё вопрос или сменить тему?'
-NEW_QUIZ_TOPIC = 'Выберите тему:'
+NEW_WORD_MESSAGE = 'new_word'
+ERROR_MESSAGE = '🚫 Произошла ошибка: {error}'
+LOADING_MESSAGE = '⏳ Думаю над вопросом...'
+SELECT_PERSON = '🔍 Выберите личность:'
+SELECT_QUIZ_TOPIC = '📚 Выберите тему:'
+RETURN_TO_MAIN = '🏠 Вернуться в главное меню'
+RANDOM_MORE = '🧠 Хотите еще один факт?'
+NEW_WORD_MORE = '🆕 Хотите узнать новое слово или вернуться в главное меню?'
+CHANGE_PERSON = '🔍 Выбрать другую личность?'
+CHANGE_QUIZ_TOPIC_OR_CONTINUE = '❓ Хотите задать ещё вопрос или сменить тему?'
 
 
 # Тексты кнопок
@@ -45,6 +48,7 @@ BUTTON_TEXTS = {
     'change_person': '🔄Выбрать другую личность',
     'change_quiz_topic': '📚 Сменить тему квиза',
     'quiz_more': '❓ Задать ещё вопрос',
+    'new_word': ' 🆕 Новое слово'
 }
 
 
@@ -81,7 +85,7 @@ QUIZ_BUTTONS = {
     'quiz_biology': 'Биология 🌱'
 }
 
-CORRECT_ANSWER = 'Правильно! ✅'
+CORRECT_ANSWER = 'Правильно!'
 
 
 TRANSLATE_QUIZ_TOPICS = {

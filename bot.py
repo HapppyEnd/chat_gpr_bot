@@ -7,16 +7,16 @@ from telegram.ext import (ApplicationBuilder, CallbackQueryHandler,
 
 from constants import (BUTTON_TEXTS, CALLBACK_CHANGE_PERSON,
                        CALLBACK_CHANGE_QUIZ_TOPIC, CALLBACK_MAIN_MENU,
-                       CALLBACK_PERSONS, CALLBACK_QUIZ_MORE,
+                       CALLBACK_NEW_WORD, CALLBACK_PERSONS, CALLBACK_QUIZ_MORE,
                        CALLBACK_QUIZ_TOPIC, CALLBACK_RANDOM_FACT,
                        CHANGE_PERSON, CHANGE_QUIZ_TOPIC_OR_CONTINUE,
                        CORRECT_ANSWER, ERROR_MESSAGE, GPT, GPT_MESSAGE,
-                       LOADING_MESSAGE, MAIN, MAIN_MENU_BUTTONS,
-                       NEW_QUIZ_TOPIC, PERSONS, QUIZ, QUIZ_BUTTONS,
-                       QUIZ_MESSAGE, RANDOM, RANDOM_MESSAGE, RANDOM_MORE,
-                       RETURN_TO_MAIN, SELECT_PERSON, SELECT_QUIZ_TOPIC,
-                       START_MESSAGE, TALK, TALK_MESSAGE, TRANSLATE_PERSONS,
-                       TRANSLATE_QUIZ_TOPICS)
+                       LOADING_MESSAGE, MAIN, MAIN_MENU_BUTTONS, NEW_WORD,
+                       NEW_WORD_MESSAGE, NEW_WORD_MORE, PERSONS, QUIZ,
+                       QUIZ_BUTTONS, QUIZ_MESSAGE, RANDOM, RANDOM_MESSAGE,
+                       RANDOM_MORE, RETURN_TO_MAIN, SELECT_PERSON,
+                       SELECT_QUIZ_TOPIC, START_MESSAGE, TALK, TALK_MESSAGE,
+                       TRANSLATE_PERSONS, TRANSLATE_QUIZ_TOPICS)
 from credentials import BOT_TOKEN
 from gpt import ChatGptService
 from util import (load_message, load_prompt, send_html, send_image,
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 chat_gpt: ChatGptService = ChatGptService.get_instance()
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает команду /start и показывает главное меню."""
     logger.info('Старт команды /start от пользователя %s',
                 update.effective_user.id)
@@ -43,7 +43,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     return MAIN
 
 
-async def random(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def random(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Отправляет пользователю рандомный факт."""
     logger.info('Запрос на рандомный факт от пользователя %s',
                 update.effective_user.id)
@@ -68,7 +68,7 @@ async def random(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def random_fact(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает запрос на получение еще одного рандомного факта."""
     logger.info('Пользователь %s запрашивает еще рандомный факт',
                 update.effective_user.id)
@@ -77,7 +77,7 @@ async def random_fact(
     return RANDOM
 
 
-async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает команду /gpt и начинает диалог с ChatGPT."""
     logger.info('Пользователь %s вызвал команду /gpt',
                 update.effective_user.id)
@@ -89,7 +89,7 @@ async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def gpt_dialog(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает сообщения от пользователя в режиме GPT."""
     logger.info('Обработка сообщения от пользователя %s в режиме GPT',
                 update.effective_user.id)
@@ -110,7 +110,7 @@ async def gpt_dialog(
 
 
 async def show_persons(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Отправляет пользователю список доступных личностей для общения."""
     logger.info('Показ списка личностей пользователю %s',
                 update.effective_user.id)
@@ -123,7 +123,7 @@ async def show_persons(
 
 
 async def select_person(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает выбор личности пользователем."""
     await update.callback_query.answer()
     person: str = update.callback_query.data
@@ -135,7 +135,7 @@ async def select_person(
 
 
 async def talk_with_person(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Начинает разговор с выбранной личностью."""
     person: str = context.user_data.get('person')
 
@@ -161,7 +161,7 @@ async def talk_with_person(
 
 
 async def change_person(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает запрос пользователя на изменение личности."""
     logger.info('Пользователь %s запрашивает изменение личности',
                 update.effective_user.id)
@@ -192,7 +192,7 @@ async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     return TALK
 
 
-async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает команду /quiz и показывает доступные темы квизов."""
     logger.info('Пользователь %s вызвал команду /quiz',
                 update.effective_user.id)
@@ -203,7 +203,7 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def quiz_topic_selected(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает выбор темы квиза пользователем."""
     await update.callback_query.answer()
     chat_gpt.set_prompt(load_prompt(QUIZ_MESSAGE))
@@ -218,7 +218,7 @@ async def quiz_topic_selected(
 
 
 async def handle_quiz_answer(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает ответ пользователя на вопрос квиза."""
     user_answer: str = (
         update.message.text if update.message else update.callback_query.data
@@ -253,17 +253,17 @@ async def handle_quiz_answer(
 
 
 async def change_quiz_topic(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обрабатывает запрос пользователя на изменение темы квиза."""
     logger.info('Пользователь %s запрашивает изменение темы квиза',
                 update.effective_user.id)
     await update.callback_query.answer()
-    await send_text_buttons(update, context, NEW_QUIZ_TOPIC, QUIZ_BUTTONS)
+    await send_text_buttons(update, context, SELECT_QUIZ_TOPIC, QUIZ_BUTTONS)
     return QUIZ
 
 
 async def quiz_more(
-        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Запрашивает новый вопрос по текущей теме квиза."""
     await update.callback_query.answer()
     topic: str = context.user_data.get('quiz_topic')
@@ -280,10 +280,52 @@ async def quiz_more(
             await send_text_buttons(
                 update,
                 context,
-                'Не удалось получить новый вопрос: {str(e)}', QUIZ_BUTTONS)
+                f'Не удалось получить новый вопрос: {str(e)}', QUIZ_BUTTONS)
     else:
-        await send_text_buttons(update, context, NEW_QUIZ_TOPIC, QUIZ_BUTTONS)
+        await send_text_buttons(
+            update, context, SELECT_QUIZ_TOPIC, QUIZ_BUTTONS)
     return QUIZ
+
+
+async def new_word(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Отправляет пользователю новое слово."""
+    logger.info('Запрос на новое слово от пользователя %s',
+                update.effective_user.id)
+
+    prompt: str = load_prompt(NEW_WORD_MESSAGE)
+    message: str = load_message(NEW_WORD_MESSAGE)
+    message = await send_response(update, context, NEW_WORD_MESSAGE, message)
+
+    try:
+        answer: str = await chat_gpt.send_question(prompt, '')
+        logger.info('Ответ от GPT: %s', answer)
+
+        if message is not None:
+            await message.edit_text(answer)
+        else:
+            logger.error('Сообщение не инициализировано корректно.')
+
+        buttons: dict[str, str] = {
+            'new_word': BUTTON_TEXTS['new_word'],
+            'main_menu': BUTTON_TEXTS['main_menu']
+        }
+        await send_text_buttons(update, context, NEW_WORD_MORE, buttons)
+        logger.info('Слово отправлено пользователю %s',
+                    update.effective_user.id)
+    except Exception as e:
+        logger.error('Ошибка при получении слова: %s', str(e))
+        await update.message.reply_text(ERROR_MESSAGE.format(error=str(e)))
+    return NEW_WORD
+
+
+async def one_more_new_word(
+        update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Обрабатывает запрос на получение еще одного слова."""
+    logger.info('Пользователь %s запрашивает новое слово',
+                update.effective_user.id)
+    await update.callback_query.answer()
+    await new_word(update, context)
+    return NEW_WORD
 
 
 async def main_menu(
@@ -295,14 +337,14 @@ async def main_menu(
     await start(update, context)
     return MAIN
 
-
 conv_handler = ConversationHandler(
     entry_points=[
         CommandHandler('start', start),
         CommandHandler('random', random),
         CommandHandler('gpt', gpt),
         CommandHandler('talk', talk),
-        CommandHandler('quiz', quiz)
+        CommandHandler('quiz', quiz),
+        CommandHandler('new_word', new_word)
     ],
     states={
         MAIN: [
@@ -334,6 +376,12 @@ conv_handler = ConversationHandler(
             CallbackQueryHandler(
                 change_quiz_topic, pattern=CALLBACK_CHANGE_QUIZ_TOPIC),
             CallbackQueryHandler(main_menu, pattern=CALLBACK_MAIN_MENU),
+        ],
+        NEW_WORD: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, new_word),
+            CallbackQueryHandler(one_more_new_word, pattern=CALLBACK_NEW_WORD),
+            CallbackQueryHandler(main_menu, pattern=CALLBACK_MAIN_MENU),
+
         ]
     },
     fallbacks=[
@@ -342,6 +390,7 @@ conv_handler = ConversationHandler(
     allow_reentry=True,
 )
 
-app = ApplicationBuilder().token(BOT_TOKEN).build()
-app.add_handler(conv_handler)
-app.run_polling()
+if __name__ == '__main__':
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(conv_handler)
+    app.run_polling()

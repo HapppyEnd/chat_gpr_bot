@@ -246,9 +246,5 @@ async def send_response(update: Update, context: ContextTypes.DEFAULT_TYPE,
         Message: Объект Message, представляющий отправленное сообщение.
     """
     await send_image(update, context, image)
-    message: Message = await send_text(update, context, text)
+    message: Message = await send_html(update, context, text)
     return message
-
-
-class Dialog:
-    pass
