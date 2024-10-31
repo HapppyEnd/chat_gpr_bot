@@ -1,7 +1,10 @@
+import os
+
 import httpx
+from dotenv import load_dotenv
 from openai import OpenAI
 
-from credentials import ChatGPT_TOKEN
+load_dotenv()
 
 
 class ChatGptService:
@@ -38,6 +41,7 @@ class ChatGptService:
 
     @staticmethod
     def get_instance():
+        ChatGPT_TOKEN = os.environ.get('ChatGPT_TOKEN')
         if not ChatGptService._instance:
             ChatGptService._instance = ChatGptService(ChatGPT_TOKEN)
         return ChatGptService._instance
@@ -50,7 +54,7 @@ class ChatGptService:
             str: Ответ от модели в виде строки.
         """
         completion = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",  # gpt-4o, gpt-4-turbo, GPT-4o mini
+            model="gpt-4-turbo",  # gpt-4o, gpt-4-turbo, GPT-4o mini
             messages=self.message_list,
             max_tokens=3000,
             temperature=0.9

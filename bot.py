@@ -1,5 +1,7 @@
 import logging
+import os
 
+from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import (ApplicationBuilder, CallbackQueryHandler,
                           CommandHandler, ContextTypes, ConversationHandler,
@@ -17,19 +19,19 @@ from constants import (BUTTON_TEXTS, CALLBACK_CHANGE_PERSON,
                        RANDOM_MORE, RETURN_TO_MAIN, SELECT_PERSON,
                        SELECT_QUIZ_TOPIC, START_MESSAGE, TALK, TALK_MESSAGE,
                        TRANSLATE_PERSONS, TRANSLATE_QUIZ_TOPICS)
-from credentials import BOT_TOKEN
 from gpt import ChatGptService
 from util import (load_message, load_prompt, send_html, send_image,
                   send_response, send_text, send_text_buttons, show_main_menu)
 
-# Настройка логирования
+load_dotenv()
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-
 logger = logging.getLogger(__name__)
 
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 chat_gpt: ChatGptService = ChatGptService.get_instance()
 
 
