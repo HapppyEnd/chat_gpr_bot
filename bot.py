@@ -50,7 +50,7 @@ async def random(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logger.info('Запрос на рандомный факт от пользователя %s',
                 update.effective_user.id)
     prompt: str = load_prompt(RANDOM_MESSAGE)
-    message: str = load_message(RANDOM_MESSAGE)
+    message = load_message(RANDOM_MESSAGE)
     message = await send_response(update, context, RANDOM_MESSAGE, message)
 
     try:
@@ -295,7 +295,7 @@ async def new_word(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 update.effective_user.id)
 
     prompt: str = load_prompt(NEW_WORD_MESSAGE)
-    message: str = load_message(NEW_WORD_MESSAGE)
+    message = load_message(NEW_WORD_MESSAGE)
     message = await send_response(update, context, NEW_WORD_MESSAGE, message)
 
     try:
